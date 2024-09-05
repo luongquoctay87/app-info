@@ -6,8 +6,8 @@ spring:
     name: discovery-server
   security:
     user:
-      name: ${EUREKA_USER:-admin}
-      password: ${EUREKA_PASSWORD:-password}
+      name: ${EUREKA_USER:admin}
+      password: ${EUREKA_PASSWORD:password}
 
 eureka:
   client:
@@ -15,6 +15,12 @@ eureka:
     fetch-registry: false
   server:
     enable-self-preservation: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 
 logging:
   level:
