@@ -6,27 +6,27 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      routes:
+      routes: # điều hướng request đến service tương ứng thông qua chỉ định trên url
         - id: authentication-service
           uri: lb://authentication-service
           predicates:
-            - Path=/auth/**
+            - Path=/auth/** # chỉ định url có chứa ký tự /auth
           filters:
-            - RewritePath=/auth/(?<segment>.*), /$\{segment}
+            - RewritePath=/auth/(?<segment>.*), /$\{segment} # thay thế ký tự /auth/ thành /
         - id: account-service
           uri: lb://account-service
           predicates:
-            - Path=/account/**
+            - Path=/account/** # chỉ định url có chứa ký tự /account
           filters:
-            - RewritePath=/account/(?<segment>.*), /$\{segment}
+            - RewritePath=/account/(?<segment>.*), /$\{segment} # thay thế ký tự /account/ thành /
 
-management:
+management: # cho phép hiển thị thông tin sức khoẻ của service
   endpoints:
     web:
       exposure:
         include: '*'
 
-#eureka:
+#eureka: # cấu hình eureka client kết nối tới eureka server
 #  client:
 #    serviceUrl:
 #      defaultZone: http://${EUREKA_USER:admin}:${EUREKA_PASSWORD:password}@${DISCOVERY_SERVER:localhost}:8761/eureka

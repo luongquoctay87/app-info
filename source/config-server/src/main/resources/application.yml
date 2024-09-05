@@ -7,7 +7,7 @@ spring:
   cloud:
     config:
       server:
-        git:
+        git: # cấu hình git repository
           uri: https://github.com/luongquoctay87/app-info
           default-label: master
 #          username: luongquoctay
@@ -19,7 +19,7 @@ management:
       exposure:
         include: '*'
 
-eureka:
+eureka: # cấu hình eureka client kết nối tới eureka server
   client:
     serviceUrl:
       defaultZone: http://${EUREKA_USER:admin}:${EUREKA_PASSWORD:password}@${DISCOVERY_SERVER:localhost}:8761/eureka
