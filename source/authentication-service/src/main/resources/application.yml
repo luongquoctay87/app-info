@@ -20,10 +20,10 @@ management: # cho phép hiển thị thông tin sức khoẻ của service
     ratelimiters:
       enabled: true
 
-#eureka: # cấu hình eureka client kết nối tới eureka server
-#  client:
-#    serviceUrl:
-#      defaultZone: http://${EUREKA_USER:admin}:${EUREKA_PASSWORD:password}@${DISCOVERY_SERVER:localhost}:8761/eureka
+eureka: # cấu hình eureka client kết nối tới eureka server
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_USER:admin}:${EUREKA_PASSWORD:password}@${DISCOVERY_SERVER:localhost}:8761/eureka
 
 resilience4j.circuitbreaker: # This specifies the configuration for the circuit breaker module of Resilience4j.
   configs: # This defines the different circuit breaker configurations. In this case, there is a single configuration named "default".

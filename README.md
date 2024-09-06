@@ -492,28 +492,31 @@ public class WelcomeController {
 ```
 
 - Test Circuit Breakers Pattern với Resilience4j
-> Để test `fallbackMethod` chúng cần start authentication-service và stop account-service
+> Để test `fallbackMethod` chúng ta cần start authentication-service và stop account-service
 ```bash
 $ curl --location 'http://localhost:4953/auth/call-account-service'
 
 Service unavailable, please try again!
 ```
 ---
+
 ## 6. Config server (Cloud config)
 
 ### 6.1 Tạo repository `app-info` trên `github.com` chứa 2 file như sau:
 
 - application.properties
 ```properties
-message.welcome=Welcome to Tây Java
+redis.host=localhost
+redis.port=6379
 ```
 
 - application.yml
 ```yml
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://admin:password@localhost:8761/eureka
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=public
+    username: postgres
+    password: password
 ```
 
 ### 6.2 Cấu hình Config Server để pull thông tin từ repository
@@ -564,8 +567,10 @@ eureka: # cấu hình eureka client kết nối tới eureka server
       defaultZone: http://${EUREKA_USER:admin}:${EUREKA_PASSWORD:password}@${DISCOVERY_SERVER:localhost}:8761/eureka 
 ```
 
-### 6.3 Cấu hình các microservice để nhận thông tin cấu hình từ Server Config
-- Thêm dependency vào các microservice cần nhận thông tin từ repository `https://github.com/luongquoctay87/app-info` tại `pom.xml`
+> Sau khi cấu hình kết nối đến `git` thì Config Server sẽ pull thông tin từ file `application.properties` và `application.yml` tại repository `https://github.com/luongquoctay87/app-info`
+
+### 6.3 Cấu hình Config client để nhận thông tin từ Config Server
+- Thêm dependency vào các microservice (Authentication service, Account service) tại `pom.xml`
 ```yml
 <dependency>
     <groupId>org.springframework.cloud</groupId>
@@ -573,36 +578,58 @@ eureka: # cấu hình eureka client kết nối tới eureka server
 </dependency>
 ```
 
-- Cấu hình thông tin server tại các microservice cần nhận thông tin từ repository `https://github.com/luongquoctay87/app-info` tại `application.properties`
+- application.properties
 ```properties
 spring.config.import=optional:configserver:http://localhost:8888/
 ```
 
 - Thêm annotation `@RefreshScope` để nhận thông tin cấu hình mới nhất từ Config Server
+
+- Authentication service đọc thông tin từ file `app-info/application.yml` đã được pull về từ Server Config
 ```java
 @RefreshScope
 @RestController
 public class WelcomeController {
 
-    @Value("${message.welcome:Hello!}")
-    private String message;
-
-    @GetMapping("/welcome")
-    public String welcome() {
-        System.out.println("================> Account service");
-        return message;
+    @GetMapping("/db-info")
+    public String getDBInfo(@Value("${spring.datasource.url}") String url,
+                            @Value("${spring.datasource.username}") String username,
+                            @Value("${spring.datasource.password}") String password) {
+        return String.format("url=%s, username=%s, password=%s", url, username, password);
     }
 }
 ```
 
-- Comment lại tất các thông tin kết nối eureka ở file `application.yml` ở __API Gateway__, __Authentication service__, __Account service__.
-> Sau khi cấu hình kết nối đến `git` thì Config Server sẽ pull thông tin từ file `application.properties` và `application.yml` tại repository `https://github.com/luongquoctay87/app-info`
-```yml
-#eureka: # cấu hình eureka client kết nối tới eureka server
-#  client:
-#    serviceUrl:
-#      defaultZone: http://${EUREKA_USER:admin}:${EUREKA_PASSWORD:password}@${DISCOVERY_SERVER:localhost}:8761/eureka 
+- Account service đọc thông tin từ file `app-info/application.properties` đã được pull về từ Server Config
+```java
+@RefreshScope
+@RestController
+public class WelcomeController {
+
+    @GetMapping("/redis-info")
+    public String getRedisInfo(@Value("${redis.host}") String host,
+                               @Value("${redis.port}") String port) {
+        return String.format("host=%s, port=%s", host, port);
+    }
+}
 ```
+
+### 6.4 Test
+
+- GET /auth/db-info
+```bash
+$ curl --location 'http://localhost:4953/auth/db-info'
+
+url=jdbc:postgresql://localhost:5432/postgres?currentSchema=public, username=postgres, password=password
+```
+
+- GET /account/redis-info
+```bash
+$ curl --location 'http://localhost:4953/account/redis-info'
+
+host=localhost, port=6379
+```
+
 ---
 ## 7. Zipkin server (Distribute Tracing)
 > Zipkin là một hệ thống theo dõi phân tán. Nó giúp thu thập dữ liệu thời gian cần thiết để khắc phục sự cố độ trễ trong kiến trúc dịch vụ. Các tính năng bao gồm cả việc thu thập và tra cứu dữ liệu này.

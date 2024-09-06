@@ -9,17 +9,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class WelcomeController {
 
-    @Value("${message.welcome:Hello!}")
-    private String message;
-
     @GetMapping("/welcome")
     public String welcome() {
         System.out.println("================> Account service");
-        return message;
+        return "Welcome to account service";
     }
 
     @GetMapping("/service-name")
-    public String name() {
+    public String getServiceName() {
         return "ACCOUNT-SERVICE";
+    }
+
+    @GetMapping("/redis-info")
+    public String getRedisInfo(@Value("${redis.host}") String host,
+                              @Value("${redis.port}") String port) {
+        return String.format("host=%s, port=%s", host, port);
     }
 }

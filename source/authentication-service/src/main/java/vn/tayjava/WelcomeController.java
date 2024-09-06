@@ -17,13 +17,10 @@ public class WelcomeController {
         this.restTemplate = restTemplate;
     }
 
-    @Value("${message.welcome:Hello!}")
-    private String message;
-
     @GetMapping("/welcome")
     public String welcome() {
         System.out.println("================> Authentication service");
-        return message;
+        return "Welcome to authentication service";
     }
 
     @CircuitBreaker(name = "accountServiceCircuitBreaker", fallbackMethod = "errorMessage")
@@ -33,8 +30,16 @@ public class WelcomeController {
         return "<h1>Hello from the " + response + "!</h1>";
     }
 
+    @GetMapping("/db-info")
+    public String getDBInfo(@Value("${spring.datasource.url}") String url,
+                            @Value("${spring.datasource.username}") String username,
+                            @Value("${spring.datasource.password}") String password) {
+        return String.format("url=%s, username=%s, password=%s", url, username, password);
+    }
+
     /**
      * Fall back method
+     *
      * @param throwable
      * @return string
      */
